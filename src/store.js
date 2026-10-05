@@ -46,9 +46,9 @@ export class TaskStore {
     return this.#tasks.get(id) ?? null;
   }
 
-  async create({ title, priority = 'medium' }) {
+  async create({ title, priority = 'medium', dueDate = null }) {
     const now = new Date().toISOString();
-    const task = { id: randomUUID(), title, priority, done: false, createdAt: now, updatedAt: now };
+    const task = { id: randomUUID(), title, priority, dueDate, done: false, createdAt: now, updatedAt: now };
     this.#tasks.set(task.id, task);
     await this.#save();
     return task;

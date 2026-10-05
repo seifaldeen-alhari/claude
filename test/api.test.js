@@ -66,6 +66,20 @@ test('validation errors', async () => {
   assert.equal((await request(`/api/tasks/${data.id}`, 'PATCH', {})).status, 400);
 });
 
+test('due dates', async () => {
+  const { status, data } = await request('/api/tasks', 'POST', { title: 'دفع الفاتورة', dueDate: '2026-12-31' });
+  assert.equal(status, 201);
+  assert.equal(data.dueDate, '2026-12-31');
+  assert.equal((await request('/api/tasks', 'POST', { title: 'بدون تاريخ' })).data.dueDate, null);
+
+  const cleared = await request(`/api/tasks/${data.id}`, 'PATCH', { dueDate: null });
+  assert.equal(cleared.data.dueDate, null);
+
+  for (const bad of ['2026-02-30', '31/12/2026', 20261231]) {
+    assert.equal((await request('/api/tasks', 'POST', { title: 'x', dueDate: bad })).status, 400, String(bad));
+  }
+});
+
 test('unknown routes and methods', async () => {
   assert.equal((await request('/api/nope')).status, 404);
   assert.equal((await request('/api/tasks', 'PUT', {})).status, 405);
