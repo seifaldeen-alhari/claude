@@ -27,7 +27,7 @@ PORT=8080 DATA_FILE=./my-tasks.json npm start
 |---|---|---|
 | `GET` | `/api/health` | فحص حالة الخادم |
 | `GET` | `/api/stats` | عدد المهام الكلي / المنجزة / المتبقية |
-| `GET` | `/api/tasks?status=open\|done&q=نص` | عرض المهام مع تصفية وبحث اختياريين |
+| `GET` | `/api/tasks?status=open\|done&q=نص&sort=created\|priority` | عرض المهام مع تصفية وبحث وترتيب اختيارية (`priority`: العالية أولًا) |
 | `POST` | `/api/tasks` | إنشاء مهمة `{ "title": "...", "priority": "low\|medium\|high", "dueDate": "YYYY-MM-DD" }` |
 | `GET` | `/api/tasks/:id` | عرض مهمة واحدة |
 | `PATCH` | `/api/tasks/:id` | تعديل `title` أو `priority` أو `dueDate` أو `done` |

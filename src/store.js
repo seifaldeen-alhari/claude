@@ -2,6 +2,9 @@ import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+// ترتيب الأولويات من الأعلى إلى الأدنى (رقم أصغر = أهم)
+const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+
 // مخزن مهام بسيط يحفظ البيانات في ملف JSON.
 // إذا لم يُمرَّر مسار ملف، تبقى البيانات في الذاكرة فقط (مفيد للاختبارات).
 export class TaskStore {
@@ -31,7 +34,7 @@ export class TaskStore {
     await rename(tmp, this.#file);
   }
 
-  list({ status, q } = {}) {
+  list({ status, q, sort } = {}) {
     let tasks = [...this.#tasks.values()];
     if (status === 'done') tasks = tasks.filter((t) => t.done);
     if (status === 'open') tasks = tasks.filter((t) => !t.done);
@@ -39,7 +42,12 @@ export class TaskStore {
       const needle = q.toLowerCase();
       tasks = tasks.filter((t) => t.title.toLowerCase().includes(needle));
     }
-    return tasks.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const byCreated = (a, b) => a.createdAt.localeCompare(b.createdAt);
+    if (sort === 'priority') {
+      // الأعلى أولوية أولًا، وعند التساوي الأقدم إنشاءً أولًا
+      return tasks.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || byCreated(a, b));
+    }
+    return tasks.sort(byCreated);
   }
 
   get(id) {

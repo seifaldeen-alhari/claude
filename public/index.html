@@ -56,6 +56,10 @@
 
   <div class="toolbar">
     <input type="search" id="search" placeholder="بحث...">
+    <select id="sort" title="ترتيب المهام">
+      <option value="created">الأقدم أولًا</option>
+      <option value="priority">حسب الأولوية</option>
+    </select>
     <div class="filters">
       <button data-status="" class="active">الكل</button>
       <button data-status="open">قيد التنفيذ</button>
@@ -68,7 +72,7 @@
 
 <script>
   const PRIORITY_LABEL = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية' };
-  const state = { status: '', q: '' };
+  const state = { status: '', q: '', sort: 'created' };
   const $ = (id) => document.getElementById(id);
   // تاريخ اليوم بالتوقيت المحلي بصيغة YYYY-MM-DD
   const today = () => new Date().toLocaleDateString('en-CA');
@@ -85,6 +89,7 @@
     const params = new URLSearchParams();
     if (state.status) params.set('status', state.status);
     if (state.q) params.set('q', state.q);
+    params.set('sort', state.sort);
     const [tasks, stats] = await Promise.all([api('/api/tasks?' + params), api('/api/stats')]);
     $('stats').textContent = `${stats.total} مهمة · ${stats.done} منجزة · ${stats.open} متبقية`;
     const list = $('list');
@@ -128,6 +133,8 @@
     $('title').value = '';
     $('dueDate').value = '';
   };
+
+  $('sort').onchange = (e) => { state.sort = e.target.value; refresh(); };
 
   let timer;
   $('search').oninput = (e) => {
