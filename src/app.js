@@ -7,6 +7,7 @@ import { validateTask } from './validate.js';
 const PUBLIC_DIR = fileURLToPath(new URL('../public/', import.meta.url));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
 const MAX_BODY = 1_000_000;
+const SORTS = ['created', 'priority'];
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -53,10 +54,13 @@ function buildRoutes(store) {
   return [
     ['GET', /^\/api\/health$/, () => [200, { ok: true, uptime: process.uptime() }]],
     ['GET', /^\/api\/stats$/, () => [200, store.stats()]],
-    ['GET', /^\/api\/tasks$/, (_req, _params, url) => [
-      200,
-      store.list({ status: url.searchParams.get('status'), q: url.searchParams.get('q') }),
-    ]],
+    ['GET', /^\/api\/tasks$/, (_req, _params, url) => {
+      const sort = url.searchParams.get('sort');
+      if (sort && !SORTS.includes(sort)) {
+        throw new HttpError(400, `الترتيب (sort) يجب أن يكون إحدى: ${SORTS.join(', ')}`);
+      }
+      return [200, store.list({ status: url.searchParams.get('status'), q: url.searchParams.get('q'), sort })];
+    }],
     ['POST', /^\/api\/tasks$/, async (req) => {
       const { value, error } = validateTask(await readJson(req));
       if (error) throw new HttpError(400, error);

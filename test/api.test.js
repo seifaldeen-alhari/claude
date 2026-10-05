@@ -80,6 +80,30 @@ test('due dates', async () => {
   }
 });
 
+test('sorting by priority', async () => {
+  const fresh = createApp(new TaskStore());
+  await new Promise((resolve) => fresh.listen(0, resolve));
+  const url = `http://localhost:${fresh.address().port}/api/tasks`;
+  const post = (title, priority) => fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, priority }),
+  });
+  try {
+    await post('أ', 'low');
+    await post('ب', 'high');
+    await post('ج', 'medium');
+    await post('د', 'high');
+    const titles = async (query) => (await (await fetch(url + query)).json()).map((t) => t.title);
+
+    assert.deepEqual(await titles(''), ['أ', 'ب', 'ج', 'د']);
+    assert.deepEqual(await titles('?sort=created'), ['أ', 'ب', 'ج', 'د']);
+    // high أولًا (الأقدم منها قبل الأحدث)، ثم medium، ثم low
+    assert.deepEqual(await titles('?sort=priority'), ['ب', 'د', 'ج', 'أ']);
+    assert.equal((await fetch(url + '?sort=banana')).status, 400);
+  } finally {
+    fresh.close();
+  }
+});
+
 test('unknown routes and methods', async () => {
   assert.equal((await request('/api/nope')).status, 404);
   assert.equal((await request('/api/tasks', 'PUT', {})).status, 405);
